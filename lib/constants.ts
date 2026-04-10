@@ -3,9 +3,6 @@ export const INGREDIENT_CATEGORIES = [
   "Fresh",
   "Dairy",
   "Meat",
-  "Spice",
-  "Frozen",
-  "Liquid",
 ];
 
 export const MEASUREMENT_UNITS = [
@@ -17,4 +14,6 @@ export const MEASUREMENT_UNITS = [
   "L",
   "pcs",
   "cans",
+  "bottles",
+  "box",
 ];

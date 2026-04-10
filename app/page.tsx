@@ -7,7 +7,7 @@ import { calculateSupplyList } from "@/lib/calculations";
 import { supabase } from "@/lib/supabase";
 import { exportSupplyToExcel } from "@/lib/export";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/input";
+import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 

@@ -129,7 +129,7 @@ export default function AdminLayout({
 
       <main className={`${
         sidebarOpen ? "ml-64" : "ml-20"
-      } p-10 transition-all duration-300 ease-in-out min-h-screen`}>{children}</main>
+      } p-4 md:p-10 transition-all duration-300 ease-in-out min-h-screen overflow-x-hidden`}>{children}</main>
     </div>
   );
 }

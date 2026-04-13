@@ -49,9 +49,9 @@ export default function MenuSelector({ menuItems, setMenuItems }: Props) {
   return (
     <div className="space-y-4">
       {menuItems.map((item, index) => (
-        <div key={index} className="flex gap-3 items-center">
+        <div key={index} className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
           <select
-            className="border border-gray-300 p-3 rounded-xl w-full"
+            className="border border-gray-300 p-3 rounded-xl flex-1 bg-white text-black"
             value={item.dish}
             onChange={(e) => updateMenu(index, "dish", e.target.value)}
           >
@@ -65,7 +65,7 @@ export default function MenuSelector({ menuItems, setMenuItems }: Props) {
 
           <input
             type="number"
-            className="border border-gray-300 p-3 rounded-xl w-full"
+            className="border border-gray-300 p-3 rounded-xl flex-1 bg-white text-black"
             placeholder="Qty"
             value={item.quantity}
             onChange={(e) =>
@@ -75,16 +75,16 @@ export default function MenuSelector({ menuItems, setMenuItems }: Props) {
 
           <button
             onClick={() => removeMenuItem(index)}
-            className="bg-red-500 hover:bg-red-600 text-gray-300 px-4 py-3 rounded-xl"
+            className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl md:w-auto w-full font-semibold transition-all"
           >
-            X
+            Remove
           </button>
         </div>
       ))}
 
       <button
         onClick={addMenuItem}
-        className="bg-green-600 hover:bg-green-700 text-gray-300 px-5 py-3 rounded-xl mt-2"
+        className="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl mt-2 w-full md:w-auto font-semibold transition-all"
       >
         + Add Dish
       </button>

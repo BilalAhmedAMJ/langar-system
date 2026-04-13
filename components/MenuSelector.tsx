@@ -14,17 +14,20 @@ type Props = {
 };
 
 export default function MenuSelector({ menuItems, setMenuItems }: Props) {
-  const [availableMenus, setAvailableMenus] = useState<string[]>([]);
+  const [availableMenus, setAvailableMenus] = useState<Array<{name: string, category: string}>>([]);
 
   useEffect(() => {
     fetchMenus();
   }, []);
 
   async function fetchMenus() {
-    const { data } = await supabase.from("menus").select("name");
+    const { data } = await supabase
+      .from("menus")
+      .select("name, category")
+      .order("category, name");
 
     if (data) {
-      setAvailableMenus(data.map((menu) => menu.name));
+      setAvailableMenus(data);
     }
   }
 
@@ -46,6 +49,13 @@ export default function MenuSelector({ menuItems, setMenuItems }: Props) {
     setMenuItems(menuItems.filter((_, i) => i !== index));
   };
 
+  // Group menus by category
+  const menusByCategory = availableMenus.reduce((acc, menu) => {
+    if (!acc[menu.category]) acc[menu.category] = [];
+    acc[menu.category].push(menu.name);
+    return acc;
+  }, {} as Record<string, string[]>);
+
   return (
     <div className="space-y-4">
       {menuItems.map((item, index) => (
@@ -58,18 +68,24 @@ export default function MenuSelector({ menuItems, setMenuItems }: Props) {
             <option value="">Select Dish</option>
             
 
-            {availableMenus.map((menu) => (
-              <option key={menu}>{menu}</option>
+            {Object.entries(menusByCategory).map(([category, dishes]) => (
+              <optgroup key={category} label={category}>
+                {dishes.map((dish) => (
+                  <option key={dish} value={dish}>
+                    {dish}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
 
           <input
             type="number"
             className="border border-gray-300 p-3 rounded-xl flex-1 bg-white text-black"
-            placeholder="Qty"
-            value={item.quantity}
+            placeholder="Food Quantity"
+            value={item.quantity === 0 ? "" : item.quantity}
             onChange={(e) =>
-              updateMenu(index, "quantity", Number(e.target.value))
+              updateMenu(index, "quantity", e.target.value === "" ? 0 : Number(e.target.value))
             }
           />
 

@@ -1,8 +1,9 @@
 export const INGREDIENT_CATEGORIES = [
   "Dry",
-  "Fresh",
+  "Fresh Produce",
   "Dairy",
   "Meat",
+  "Frozen",
 ];
 
 export const MEASUREMENT_UNITS = [

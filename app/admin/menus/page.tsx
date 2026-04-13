@@ -7,16 +7,20 @@ import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 
+const FOOD_CATEGORIES = ["Rice", "Curries", "Drinks", "Dessert", "Bread", "Vegetables", "Other"];
+
 export default function MenusPage() {
   const [menus, setMenus] = useState<any[]>([]);
 
   const [menuName, setMenuName] = useState("");
+  const [menuCategory, setMenuCategory] = useState("");
   const [servesPerDaigh, setServesPerDaigh] = useState(250);
 
   const [editingMenu, setEditingMenu] = useState<any>(null);
 
   const [editMenuData, setEditMenuData] = useState({
     name: "",
+    category: "",
     serves_per_daigh: 250,
   });
 
@@ -28,7 +32,7 @@ export default function MenusPage() {
     const { data } = await supabase
       .from("menus")
       .select("*")
-      .order("name");
+      .order("category, name");
 
     if (data) setMenus(data);
   }
@@ -39,11 +43,13 @@ export default function MenusPage() {
     await supabase.from("menus").insert([
       {
         name: menuName,
+        category: menuCategory,
         serves_per_daigh: servesPerDaigh,
       },
     ]);
 
     setMenuName("");
+    setMenuCategory("");
     setServesPerDaigh(250);
 
     fetchMenus();
@@ -69,6 +75,12 @@ export default function MenusPage() {
     fetchMenus();
   };
 
+  // Group menus by category
+  const menusByCategory = FOOD_CATEGORIES.reduce((acc, category) => {
+    acc[category] = menus.filter(m => m.category === category);
+    return acc;
+  }, {} as Record<string, any[]>);
+
   return (
     <div>
       <div className="mb-12">
@@ -85,7 +97,7 @@ export default function MenusPage() {
         </h2>
 
         <input
-          className="border p-3 rounded-xl w-full mb-3"
+          className="border p-3 rounded-xl w-full mb-3 bg-white text-black"
           placeholder="Menu Name"
           value={menuName}
           onChange={(e) =>
@@ -93,8 +105,23 @@ export default function MenusPage() {
           }
         />
 
+        <select
+          className="border p-3 rounded-xl w-full mb-3 bg-white text-black"
+          value={menuCategory}
+          onChange={(e) =>
+            setMenuCategory(e.target.value)
+          }
+        >
+          <option value="">Select Category</option>
+          {FOOD_CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
+
         <input
-          className="border p-3 rounded-xl w-full mb-3"
+          className="border p-3 rounded-xl w-full mb-3 bg-white text-black"
           type="number"
           placeholder="Serves Per Daigh"
           value={servesPerDaigh}
@@ -110,62 +137,77 @@ export default function MenusPage() {
 </Button>
       </div>
 
-      {/* Existing Menus */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {menus.map((menu) => (
-          <div
-            key={menu.id}
-            className="bg-gray-800 p-5 rounded-xl shadow-lg shadow-black/20 flex flex-col justify-between"
-          >
-            <div className="mb-4">
-              <h2 className="font-bold text-lg">
-                {menu.name}
-              </h2>
+      {/* Existing Menus by Category */}
+      <div className="space-y-10">
+        {FOOD_CATEGORIES.map((category) => {
+          const categoryMenus = menusByCategory[category];
+          if (categoryMenus.length === 0) return null;
 
-              <p className="text-gray-400 text-sm">
-                Serves: {menu.serves_per_daigh}
-              </p>
+          return (
+            <div key={category}>
+              <h3 className="text-2xl font-bold text-white mb-6 pb-3 border-b border-gray-700">
+                {category}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {categoryMenus.map((menu) => (
+                  <div
+                    key={menu.id}
+                    className="bg-gray-800 p-5 rounded-xl shadow-lg shadow-black/20 flex flex-col justify-between"
+                  >
+                    <div className="mb-4">
+                      <h2 className="font-bold text-lg">
+                        {menu.name}
+                      </h2>
+
+                      <p className="text-gray-400 text-sm">
+                        Serves: {menu.serves_per_daigh}
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingMenu(menu);
+
+                          setEditMenuData({
+                            name: menu.name,
+                            category: menu.category,
+                            serves_per_daigh:
+                              menu.serves_per_daigh,
+                          });
+                        }}
+                        className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() =>
+                          deleteMenu(menu.id)
+                        }
+                        className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setEditingMenu(menu);
-
-                  setEditMenuData({
-                    name: menu.name,
-                    serves_per_daigh:
-                      menu.serves_per_daigh,
-                  });
-                }}
-                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg"
-              >
-                Edit
-              </button>
-
-              <button
-                onClick={() =>
-                  deleteMenu(menu.id)
-                }
-                className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Edit Modal */}
       {editingMenu && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-gray-800 p-8 rounded-xl w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">
+            <h2 className="text-2xl font-bold mb-4 text-white">
               Edit Menu
             </h2>
 
             <input
-              className="border p-3 rounded-xl w-full mb-3"
+              className="border p-3 rounded-xl w-full mb-3 bg-white text-black"
               value={editMenuData.name}
               onChange={(e) =>
                 setEditMenuData({
@@ -175,8 +217,26 @@ export default function MenusPage() {
               }
             />
 
+            <select
+              className="border p-3 rounded-xl w-full mb-3 bg-white text-black"
+              value={editMenuData.category}
+              onChange={(e) =>
+                setEditMenuData({
+                  ...editMenuData,
+                  category: e.target.value,
+                })
+              }
+            >
+              <option value="">Select Category</option>
+              {FOOD_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+
             <input
-              className="border p-3 rounded-xl w-full mb-4"
+              className="border p-3 rounded-xl w-full mb-4 bg-white text-black"
               type="number"
               value={
                 editMenuData.serves_per_daigh

@@ -71,13 +71,16 @@ export default function MenusPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">
-        Manage Menus
-      </h1>
+      <div className="mb-12">
+        <h1 className="text-4xl font-bold text-white mb-2">
+          Manage Menus
+        </h1>
+        <p className="text-gray-400 text-lg">Configure dishes and serving sizes for your events</p>
+      </div>
 
       {/* Add Menu Form */}
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg shadow-black/20 mb-8">
-        <h2 className="text-xl font-semibold mb-4">
+      <div className="bg-gradient-to-br from-gray-800 to-gray-700 p-8 rounded-xl shadow-lg mb-12 border border-gray-700">
+        <h2 className="text-2xl font-bold mb-6 text-white">
           Add New Menu
         </h2>
 
@@ -108,18 +111,18 @@ export default function MenusPage() {
       </div>
 
       {/* Existing Menus */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {menus.map((menu) => (
           <div
             key={menu.id}
-            className="bg-gray-800 p-5 rounded-xl shadow-lg shadow-black/20 flex justify-between items-center"
+            className="bg-gray-800 p-5 rounded-xl shadow-lg shadow-black/20 flex flex-col justify-between"
           >
-            <div>
-              <h2 className="font-bold">
+            <div className="mb-4">
+              <h2 className="font-bold text-lg">
                 {menu.name}
               </h2>
 
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm">
                 Serves: {menu.serves_per_daigh}
               </p>
             </div>
@@ -135,7 +138,7 @@ export default function MenusPage() {
                       menu.serves_per_daigh,
                   });
                 }}
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg"
               >
                 Edit
               </button>
@@ -144,7 +147,7 @@ export default function MenusPage() {
                 onClick={() =>
                   deleteMenu(menu.id)
                 }
-                className="bg-red-500 text-white px-4 py-2 rounded-lg"
+                className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg"
               >
                 Delete
               </button>

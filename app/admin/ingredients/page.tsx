@@ -77,14 +77,17 @@ export default function IngredientsPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-white mb-8">
-        Manage Ingredients
-      </h1>
+      <div className="mb-12">
+        <h1 className="text-4xl font-bold text-white mb-2">
+          Manage Ingredients
+        </h1>
+        <p className="text-gray-400 text-lg">Add, edit, and organize your ingredient inventory</p>
+      </div>
 
       {/* Add Ingredient */}
-      <div className="bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
-        <h2 className="text-xl font-semibold mb-4">
-          Add Ingredient
+      <div className="bg-gradient-to-br from-gray-800 to-gray-700 p-8 rounded-xl shadow-lg mb-12 border border-gray-700">
+        <h2 className="text-2xl font-bold mb-6 text-white">
+          Add New Ingredient
         </h2>
 
         <input
@@ -97,29 +100,29 @@ export default function IngredientsPage() {
         />
 
         <select
-  value={ingredientCategory}
-  onChange={(e) =>
-    setIngredientCategory(e.target.value)
-  }
-  className="bg-gray-700 border border-gray-600 text-white p-3 rounded-xl w-full"
->
-  <option value="">Select Category</option>
+          value={ingredientCategory}
+          onChange={(e) =>
+            setIngredientCategory(e.target.value)
+          }
+          className="bg-gray-700 border border-gray-600 text-white p-3 rounded-xl w-full mb-3"
+        >
+          <option value="">Select Category</option>
 
-  {INGREDIENT_CATEGORIES.map((cat) => (
-    <option key={cat} value={cat}>
-      {cat}
-    </option>
-  ))}
-  
-</select>
+          {INGREDIENT_CATEGORIES.map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+          
+        </select>
 
         <select
-  value={ingredientUnit}
-  onChange={(e) =>
-    setIngredientUnit(e.target.value)
-  }
-  className="bg-gray-700 border border-gray-600 text-white p-3 rounded-xl w-full"
->
+          value={ingredientUnit}
+          onChange={(e) =>
+            setIngredientUnit(e.target.value)
+          }
+          className="bg-gray-700 border border-gray-600 text-white p-3 rounded-xl w-full mb-3"
+        >
   <option value="">Select Unit</option>
 
   {MEASUREMENT_UNITS.map((unit) => (
@@ -138,18 +141,18 @@ export default function IngredientsPage() {
       </div>
 
       {/* Ingredient List */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {ingredients.map((ingredient) => (
           <div
             key={ingredient.id}
-            className="bg-gray-800 p-5 rounded-xl shadow flex justify-between items-center"
+            className="bg-gray-800 p-5 rounded-xl shadow flex flex-col justify-between"
           >
-            <div>
-              <h2 className="font-bold">
+            <div className="mb-4">
+              <h2 className="font-bold text-lg">
                 {ingredient.name}
               </h2>
 
-              <p className="text-gray-400">
+              <p className="text-gray-400 text-sm">
                 {ingredient.category} • {ingredient.unit}
               </p>
             </div>
@@ -168,7 +171,7 @@ export default function IngredientsPage() {
                     unit: ingredient.unit,
                   });
                 }}
-                className="bg-blue-600 px-4 py-2 rounded-lg"
+                className="flex-1 bg-blue-600 px-4 py-2 rounded-lg"
               >
                 Edit
               </button>
@@ -179,7 +182,7 @@ export default function IngredientsPage() {
                     ingredient.id
                   )
                 }
-                className="bg-red-600 px-4 py-2 rounded-lg"
+                className="flex-1 bg-red-600 px-4 py-2 rounded-lg"
               >
                 Delete
               </button>

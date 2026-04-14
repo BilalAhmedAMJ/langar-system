@@ -1,34 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MenuSelector from "@/components/MenuSelector";
-import { calculateSupplyList } from "@/lib/calculations";
+import { calculateSupplyList, SupplyItem } from "@/lib/calculations";
 import { supabase } from "@/lib/supabase";
-import { exportSupplyToExcel } from "@/lib/export";
+import { exportSupplyToExcel, exportSupplyToPDF } from "@/lib/export";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 
 export default function Home() {
+  const [eventName, setEventName] = useState("");
   const [menuItems, setMenuItems] = useState([
     { dish: "", quantity: 0 },
   ]);
 
-  const [supplyList, setSupplyList] = useState<Record<string, number>>({});
+  const [supplyList, setSupplyList] = useState<Record<string, SupplyItem>>({});
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const savedEventName = localStorage.getItem("langar_eventName");
+    const savedMenuItems = localStorage.getItem("langar_menuItems");
+    const savedSupplyList = localStorage.getItem("langar_supplyList");
+
+    if (savedEventName) {
+      setEventName(savedEventName);
+    }
+    if (savedMenuItems) {
+      setMenuItems(JSON.parse(savedMenuItems));
+    }
+    if (savedSupplyList) {
+      setSupplyList(JSON.parse(savedSupplyList));
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("langar_eventName", eventName);
+    }
+  }, [eventName, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("langar_menuItems", JSON.stringify(menuItems));
+    }
+  }, [menuItems, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem("langar_supplyList", JSON.stringify(supplyList));
+    }
+  }, [supplyList, isLoaded]);
 
   const generateSupplyList = async () => {
   const result = await calculateSupplyList(menuItems);
 
   setSupplyList(result);
 
-  await supabase.from("orders").insert([
-    {
-      order_data: menuItems,
-      supply_output: result,
-    },
-  ]);
+  try {
+    const { data, error } = await supabase.from("orders").insert([
+      {
+        event_name: eventName || "Untitled Event",
+        order_data: menuItems,
+        supply_output: result,
+      },
+    ]);
+
+    if (error) {
+      console.error("Error saving order:", error);
+      console.error("Error code:", error.code);
+      console.error("Error message:", error.message);
+      console.error("Error details:", error.details);
+      alert(`Error saving order: ${error.message || JSON.stringify(error)}`);
+    } else {
+      console.log("Order saved successfully", data);
+    }
+  } catch (err) {
+    console.error("Exception saving order:", err);
+    alert(`Exception saving order: ${err}`);
+  }
 };
 
 return (
@@ -57,6 +110,16 @@ return (
             Build Order
           </h2>
           <p className="text-gray-400 mt-2 text-sm md:text-base">Select dishes and quantities for your event</p>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-300 mb-2">Event Name</label>
+          <Input
+            type="text"
+            placeholder="e.g., Wedding Reception, Community Gathering"
+            value={eventName}
+            onChange={(e) => setEventName(e.target.value)}
+          />
         </div>
 
         <MenuSelector
@@ -89,21 +152,37 @@ return (
             <p className="text-gray-600 text-sm mt-2">Generate a supply list to see ingredient requirements</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {Object.entries(supplyList).map(
-              ([ingredient, qty]) => (
-                <div
-                  key={ingredient}
-                  className="flex justify-between items-center bg-gradient-to-r from-gray-700 to-gray-600 p-3 md:p-4 rounded-lg hover:from-gray-600 hover:to-gray-500 transition-all duration-200"
-                >
-                  <span className="text-gray-100 font-medium text-sm md:text-base">{ingredient}</span>
+          <div className="space-y-6">
+            {Object.entries(
+              Object.entries(supplyList).reduce((acc, [ingredient, supply]) => {
+                const category = supply.category || "Uncategorized";
+                if (!acc[category]) acc[category] = [];
+                acc[category].push({ ingredient, ...supply });
+                return acc;
+              }, {} as Record<string, Array<{ ingredient: string } & SupplyItem>>)
+            )
+              .sort()
+              .map(([category, items]) => (
+                <div key={category}>
+                  <h3 className="text-lg md:text-xl font-bold text-cyan-400 mb-3 pb-2 border-b border-gray-600">
+                    {category}
+                  </h3>
+                  <div className="space-y-2">
+                    {items.map((item) => (
+                      <div
+                        key={item.ingredient}
+                        className="flex justify-between items-center bg-gradient-to-r from-gray-700 to-gray-600 p-3 md:p-4 rounded-lg hover:from-gray-600 hover:to-gray-500 transition-all duration-200"
+                      >
+                        <span className="text-gray-100 font-medium text-sm md:text-base">{item.ingredient}</span>
 
-                  <span className="font-bold text-blue-400 text-base md:text-lg">
-                    {Number(qty).toFixed(2)}
-                  </span>
+                        <span className="font-bold text-blue-400 text-base md:text-lg">
+                          {Number(item.qty).toFixed(2)} <span className="text-cyan-400">{item.unit}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              )
-            )}
+              ))}
           </div>
         )}
 
@@ -119,10 +198,10 @@ return (
             </Button>
 
             <Button
-              onClick={() => window.print()}
+              onClick={() => exportSupplyToPDF(supplyList)}
               className="bg-gradient-to-r from-gray-600 to-gray-500 hover:from-gray-700 hover:to-gray-600 flex-1 text-white font-semibold py-3 rounded-lg transition-all duration-200 text-sm md:text-base"
             >
-              Print PDF
+              Download PDF
             </Button>
           </div>
         )}

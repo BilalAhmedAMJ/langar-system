@@ -7,7 +7,7 @@ import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 
-const FOOD_CATEGORIES = ["Rice", "Curries", "Drinks", "Dessert", "Bread", "Vegetables", "Other"];
+const FOOD_CATEGORIES = ["Rice", "Curry", "Drinks", "Dessert", "Vege", "Breakfast", "Other", "Daal"];
 
 export default function MenusPage() {
   const [menus, setMenus] = useState<any[]>([]);

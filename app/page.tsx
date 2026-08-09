@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import MenuSelector from "@/components/MenuSelector";
-import { calculateSupplyList, SupplyItem } from "@/lib/calculations";
+import {
+  calculateDishCost,
+  calculateSupplyList,
+  SupplyItem,
+} from "@/lib/calculations";
 import { supabase } from "@/lib/supabase";
 import { exportSupplyToExcel, exportSupplyToPDF } from "@/lib/export";
 import Button from "@/components/ui/Button";
@@ -11,13 +15,20 @@ import Input from "@/components/ui/Input";
 import Card from "@/components/ui/Card";
 import Modal from "@/components/ui/Modal";
 
+type MenuItem = {
+  dish: string;
+  quantity: number;
+  mode?: "people" | "daigh";
+};
+
 export default function Home() {
   const [eventName, setEventName] = useState("");
-  const [menuItems, setMenuItems] = useState([
-    { dish: "", quantity: 0 },
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([
+    { dish: "", quantity: 0, mode: "people" },
   ]);
 
   const [supplyList, setSupplyList] = useState<Record<string, SupplyItem>>({});
+  const [dishCosts, setDishCosts] = useState<Record<string, any>>({});
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -54,6 +65,36 @@ export default function Home() {
       localStorage.setItem("langar_supplyList", JSON.stringify(supplyList));
     }
   }, [supplyList, isLoaded]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDishCosts = async () => {
+      const nextDishCosts: Record<string, any> = {};
+
+      for (const [index, item] of menuItems.entries()) {
+        if (!item.dish || item.quantity <= 0) continue;
+
+        const cost = await calculateDishCost(
+          item.dish,
+          item.quantity,
+          item.mode || "people"
+        );
+
+        nextDishCosts[`${item.dish}-${index}`] = cost;
+      }
+
+      if (isMounted) {
+        setDishCosts(nextDishCosts);
+      }
+    };
+
+    loadDishCosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [menuItems]);
 
   const generateSupplyList = async () => {
   const result = await calculateSupplyList(menuItems);
@@ -126,6 +167,50 @@ return (
           menuItems={menuItems}
           setMenuItems={setMenuItems}
         />
+
+        {menuItems.some((item) => item.dish && item.quantity > 0) && (
+          <div className="mt-6 space-y-3">
+            <h3 className="text-lg font-bold text-cyan-400">Dish Cost Estimate</h3>
+
+            {menuItems
+              .filter((item) => item.dish && item.quantity > 0)
+              .map((item, index) => {
+                const cost = dishCosts[`${item.dish}-${index}`];
+
+                if (!cost) return null;
+
+                const quantityLabel = item.mode === "daigh" ? "daighs" : "portions";
+
+                return (
+                  <div
+                    key={`${item.dish}-${index}`}
+                    className="bg-gray-800 border border-gray-700 rounded-xl p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-white">{item.dish}</p>
+                        <p className="text-sm text-gray-400">{item.quantity} {quantityLabel}</p>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="text-xs uppercase tracking-wide text-gray-400">Per person</p>
+                        <p className="text-xl font-bold text-green-400">
+                          ${Number(cost.perPersonCost || 0).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 border-t border-gray-700 pt-3 flex items-center justify-between text-sm text-gray-300">
+                      <span>Total dish cost</span>
+                      <span className="font-semibold text-blue-300">
+                        ${Number(cost.totalCost || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
 
         <Button
           onClick={generateSupplyList}

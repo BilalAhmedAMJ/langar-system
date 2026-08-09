@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 type MenuItem = {
   dish: string;
   quantity: number;
+  mode?: "people" | "daigh";
 };
 
 type Props = {
@@ -42,7 +43,7 @@ export default function MenuSelector({ menuItems, setMenuItems }: Props) {
   };
 
   const addMenuItem = () => {
-    setMenuItems([...menuItems, { dish: "", quantity: 0 }]);
+    setMenuItems([...menuItems, { dish: "", quantity: 0, mode: "people" }]);
   };
 
   const removeMenuItem = (index: number) => {
@@ -79,15 +80,28 @@ export default function MenuSelector({ menuItems, setMenuItems }: Props) {
             ))}
           </select>
 
-          <input
-            type="number"
-            className="border border-gray-300 p-3 rounded-xl flex-1 bg-white text-black"
-            placeholder="Food Quantity"
-            value={item.quantity === 0 ? "" : item.quantity}
-            onChange={(e) =>
-              updateMenu(index, "quantity", e.target.value === "" ? 0 : Number(e.target.value))
-            }
-          />
+          <div className="flex flex-col md:flex-row gap-3 flex-1">
+            <input
+              type="number"
+              className="border border-gray-300 p-3 rounded-xl flex-1 bg-white text-black"
+              placeholder={item.mode === "daigh" ? "Daighs" : "People"}
+              value={item.quantity === 0 ? "" : item.quantity}
+              onChange={(e) =>
+                updateMenu(index, "quantity", e.target.value === "" ? 0 : Number(e.target.value))
+              }
+            />
+
+            <select
+              className="border border-gray-300 p-3 rounded-xl bg-white text-black min-w-[140px]"
+              value={item.mode || "people"}
+              onChange={(e) =>
+                updateMenu(index, "mode", e.target.value as "people" | "daigh")
+              }
+            >
+              <option value="people">People</option>
+              <option value="daigh">Daighs</option>
+            </select>
+          </div>
 
           <button
             onClick={() => removeMenuItem(index)}
